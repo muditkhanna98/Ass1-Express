@@ -8,6 +8,7 @@
  *
  *********************************************************************************/
 
+//Importing express, body parser and file system module
 const express = require("express");
 const app = express();
 const fs = require("fs");
@@ -41,8 +42,8 @@ app.get("/data", (req, res) => {
   }
 });
 
+//Get method to get book based on index using params
 app.get("/data/isbn/:index", (req, res) => {
-  console.log(books);
   try {
     const index = req.params.index;
     if (index < 0 || index > booksData.length) {
@@ -55,6 +56,7 @@ app.get("/data/isbn/:index", (req, res) => {
   }
 });
 
+//Method to show the isbn search form
 app.get("/data/search/isbn", (req, res) => {
   res.send(`<form method="POST" action="/data/search/isbn">
     <input type="text" name="isbn" placeholder="Enter ISBN"/>
@@ -62,6 +64,7 @@ app.get("/data/search/isbn", (req, res) => {
     </form>`);
 });
 
+//Post method to post result for isbn search form
 app.post("/data/search/isbn", (req, res) => {
   const isbn = req.body.isbn;
   const book = booksData.find((element) => element.isbn === isbn);
@@ -80,6 +83,60 @@ app.post("/data/search/isbn", (req, res) => {
     res.send("No such book exists in the record");
   }
 });
+
+//Method to show the title search form
+app.get("/data/search/title", (req, res) => {
+  res.send(`<form method="POST" action="/data/search/title">
+    <input type="text" name="title" placeholder="Enter Title"/>
+    <input type="submit"> 
+    </form>`);
+});
+
+//Method to show title search results
+app.post("/data/search/title", (req, res) => {
+  const title = req.body.title;
+  const booksContainingTitle = [];
+  let returnData = "";
+
+  booksData.forEach((book) => {
+    if (book.title.toLowerCase().includes(title.toLowerCase())) {
+      booksContainingTitle.push(book);
+    }
+  });
+
+  if (!booksContainingTitle.length) {
+    // Check if any book with the searched title exists or not
+    res.send("No books found with the given title");
+  } else {
+    booksContainingTitle.forEach((book) => {
+      returnData += `
+      <h2>${book.title}</h2>
+      <p>Subtitle: ${book.subtitle}</p>
+      <p>Author: ${book.author}</p>
+      <hr>
+      `;
+    });
+
+    res.send(returnData);
+  }
+});
+
+/*
+Cons of req.query() for search feature:
+
+It can be less secure as the client can manipulate the query string to pass unexpected data.
+It can become difficult to manage and validate many different query parameters, leading to complex code.
+
+Pros of req.params for search feature:
+
+It's more secure as the parameter values are part of the route definition and cannot be easily manipulated by the client.
+It can be easier to validate and manage parameter values as there are usually fewer of them.
+
+Cons of req.params for search feature:
+
+It's less flexible as we need to define the route for each parameter we want to use in the search.
+It doesn't handle optional parameters as elegantly as req.query()
+*/
 
 //Handle wrong route using middleware
 app.use((req, res) => {
